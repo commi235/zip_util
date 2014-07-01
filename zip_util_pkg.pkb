@@ -13,6 +13,7 @@ is
 * ------  ----------  --------------------------------
 * MBR     09.01.2011  Created
 * MBR     21.05.2012  Fixed a bug related to use of dbms_lob.substr in get_file (use dbms_lob.copy instead)
+* MK      01.07.2014  Added get_file_clob to immediatly retrieve file content as a CLOB
 *
 * @headcom
 */
@@ -238,6 +239,35 @@ is
     RETURN NULL;
   END get_file;
 
+  FUNCTION get_file_clob( p_zipped_blob IN BLOB
+                        , p_file_name IN VARCHAR2
+                        , p_encoding IN VARCHAR2 := NULL
+                        )
+    RETURN CLOB
+  AS
+    l_file_blob BLOB;
+    l_return CLOB;
+    dest_offset INTEGER := 1;
+    src_offset INTEGER := 1;
+    l_warning INTEGER;
+    l_lang_ctx INTEGER := dbms_lob.DEFAULT_LANG_CTX;
+  BEGIN
+    l_file_blob := get_file( p_zipped_blob => p_zipped_blob
+                           , p_file_name => p_file_name
+                           , p_encoding => p_encoding
+                           );
+     dbms_lob.converttoclob( l_return
+                          , l_file_blob
+                          , dbms_lob.lobmaxsize
+                          , dest_offset
+                          , src_offset
+                          , nls_charset_id( 'AL32UTF8' ) 
+                          , l_lang_ctx
+                          , l_warning
+                          );   
+    RETURN l_return;
+  END get_file_clob;
+
   PROCEDURE add_file( p_zipped_blob IN OUT NOCOPY BLOB
                     , p_name IN VARCHAR2
                     , p_content IN BLOB
@@ -282,7 +312,7 @@ is
                     )
   AS
     l_tmp BLOB;
-    dest_offset integer := 1;
+    dest_offset INTEGER := 1;
     src_offset INTEGER := 1;
     l_warning INTEGER;
     l_lang_ctx INTEGER := dbms_lob.DEFAULT_LANG_CTX;
@@ -310,9 +340,9 @@ is
   BEGIN
     l_offset_directory := dbms_lob.getlength( p_zipped_blob );
     l_offset := dbms_lob.instr( p_zipped_blob
-                            , hextoraw( '504B0304' )
-                            , 1
-                            );
+                              , hextoraw( '504B0304' )
+                              , 1
+                              );
     WHILE l_offset > 0 LOOP
       l_cnt := l_cnt + 1;
       dbms_lob.APPEND( p_zipped_blob
