@@ -247,8 +247,8 @@ is
   AS
     l_file_blob BLOB;
     l_return CLOB;
-    dest_offset INTEGER := 1;
-    src_offset INTEGER := 1;
+    l_dest_offset INTEGER := 1;
+    l_src_offset INTEGER := 1;
     l_warning INTEGER;
     l_lang_ctx INTEGER := dbms_lob.DEFAULT_LANG_CTX;
   BEGIN
@@ -256,15 +256,21 @@ is
                            , p_file_name => p_file_name
                            , p_encoding => p_encoding
                            );
-     dbms_lob.converttoclob( l_return
-                          , l_file_blob
-                          , dbms_lob.lobmaxsize
-                          , dest_offset
-                          , src_offset
-                          , nls_charset_id( 'AL32UTF8' ) 
-                          , l_lang_ctx
-                          , l_warning
-                          );   
+    IF l_file_blob IS NULL THEN
+      raise_application_error( -20000
+                             , 'File not found...'
+                             );
+    END IF;
+    dbms_lob.createtemporary (l_return, true);
+    dbms_lob.converttoclob( dest_lob => l_return
+                          , src_blob => l_file_blob
+                          , amount => dbms_lob.lobmaxsize
+                          , dest_offset => l_dest_offset
+                          , src_offset => l_src_offset
+                          , blob_csid => dbms_lob.default_csid
+                          , lang_context =>l_lang_ctx
+                          , warning => l_warning
+                          );
     RETURN l_return;
   END get_file_clob;
 
