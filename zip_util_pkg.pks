@@ -14,7 +14,7 @@ AS
 * ------  ----------  --------------------------------
 * MBR     09.01.2011  Created
 * MK      16.04.2014  Removed UTL_FILE dependencies and file operations
-* MK      01.07.2014  Added get_file_clob to immediatly retrieve file content as a CLOB
+* MK      01.07.2014  Added get_file_clob to immediately retrieve file content as a CLOB
 *
 * @headcom
 **/
